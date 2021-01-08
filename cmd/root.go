@@ -54,7 +54,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		cmd.Println(string(out))
+		cmd.Print(string(out))
 		return nil
 	},
 }
@@ -70,7 +70,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
+	rootCmd.SetOut(os.Stdout)
+	rootCmd.SetErr(os.Stderr)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -111,7 +112,6 @@ func initConfig() {
 // ToFormattedYaml used to format input json or yaml to clean yaml
 func ToFormattedYaml(in []byte) (out []byte, err error) {
 	var injson string
-	var outjson []string
 	isYaml := !isJSON(in)
 	if isYaml {
 		injsonbytes, err := yaml.YAMLToJSON(in)
@@ -132,29 +132,22 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 			if err != nil {
 				return nil, fmt.Errorf("error formatting json to yaml in a list: %v", err)
 			}
-			outjson = append(outjson, itemFormatted)
+			var temp []byte
+			temp, err = yaml.JSONToYAML([]byte(itemFormatted))
+			if err != nil {
+				return nil, fmt.Errorf("error converting from json to yaml : %v", err)
+			}
+			if i+1 != len(items) {
+				temp = append(temp, []byte("\n---\n\n")...)
+			}
+			out = append(out, temp...)
 		}
 	} else {
 		itemFormatted, err := Format(injson)
 		if err != nil {
 			return nil, fmt.Errorf("error formatting single json to yaml : %v", err)
 		}
-		outjson = append(outjson, itemFormatted)
-	}
-	//if we got List it outjson array contains more than one json, process all of them and append to out byte slice
-	if len(outjson) > 1 {
-		for i := range outjson {
-			var temp []byte
-			temp, err = yaml.JSONToYAML([]byte(outjson[i]))
-			if err != nil {
-				return nil, fmt.Errorf("error converting from json to yaml : %v", err)
-			}
-			temp = append(temp, []byte("\n---\n\n")...)
-			out = append(out, temp...)
-		}
-
-	} else {
-		out, err = yaml.JSONToYAML([]byte(outjson[0]))
+		out, err = yaml.JSONToYAML([]byte(itemFormatted))
 		if err != nil {
 			return nil, fmt.Errorf("error converting from json to yaml : %v", err)
 		}
@@ -166,20 +159,31 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 func Format(in string) (out string, err error) {
 	out = in
 	// read filters from json array defaultFilters and delete fields according to them
-	fCount := countFilters(defaultFilters)
-	for i := 0; i < fCount; i++ {
+	filterCount := int(gjson.Get(defaultFilters, "#").Int())
+	for i := 0; i < filterCount; i++ {
 		out, _ = sjson.Delete(out, gjson.Get(defaultFilters, fmt.Sprint(i)).String())
 	}
-	// gets container count and loops over each container with filters from containerFilters
-	cFCount := countFilters(containerFilters)
-	for i := 0; i <= countContainers(in); i++ {
-		containerNumber := fmt.Sprint(i)
-		for j := 0; j < cFCount; j++ {
-			filterNumber := fmt.Sprint(j)
-			filter := strings.Replace(gjson.Get(containerFilters, filterNumber).String(), "*", containerNumber, 1)
-			out, _ = sjson.Delete(out, filter)
-			// fmt.Println(filter)
+	kind := gjson.Get(in, "kind").String()
+	switch kind {
+	case
+		"Deployment",
+		"StatefulSet",
+		"DaemonSet",
+		"Pod":
+		// gets container count and loops over each container with filters from containerFilters
+		containerFilterCount := int(gjson.Get(containerFilters, "#").Int())
+		containerCount := int(gjson.Get(in, "spec.template.spec.containers.#").Int())
+
+		for i := 0; i <= containerCount; i++ {
+			containerNumber := fmt.Sprint(i)
+			for j := 0; j < containerFilterCount; j++ {
+				filterNumber := fmt.Sprint(j)
+				filter := strings.Replace(gjson.Get(containerFilters, filterNumber).String(), "*", containerNumber, 1)
+				out, _ = sjson.Delete(out, filter)
+				// fmt.Println(filter)
+			}
 		}
+	default:
 	}
 	return
 }

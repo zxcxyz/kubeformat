@@ -18,16 +18,8 @@ package cmd
 import (
 	"bytes"
 	"unicode"
-
-	"github.com/tidwall/gjson"
 )
 
-func countContainers(in string) int {
-	return int(gjson.Get(in, "spec.template.spec.containers.#").Int())
-}
-func countFilters(in string) int {
-	return int(gjson.Get(in, "#").Int())
-}
 func isJSON(s []byte) bool {
 	return bytes.HasPrefix(bytes.TrimLeftFunc(s, unicode.IsSpace), []byte{'{'})
 }
