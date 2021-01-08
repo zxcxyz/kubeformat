@@ -16,12 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"unicode"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
@@ -44,8 +42,6 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var in, out []byte
 		var err error
@@ -111,16 +107,13 @@ func initConfig() {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }
-func isJSON(s []byte) bool {
-	return bytes.HasPrefix(bytes.TrimLeftFunc(s, unicode.IsSpace), []byte{'{'})
-}
 
 // ToFormattedYaml used to format input json or yaml to clean yaml
 func ToFormattedYaml(in []byte) (out []byte, err error) {
 	var injson string
 	var outjson []string
-	itsYaml := !isJSON(in)
-	if itsYaml {
+	isYaml := !isJSON(in)
+	if isYaml {
 		injsonbytes, err := yaml.YAMLToJSON(in)
 		if err != nil {
 			return nil, fmt.Errorf("error converting from yaml to json : %v", err)
@@ -135,7 +128,7 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 		items := gjson.Get(injson, "items").Array()
 		for i, item := range items {
 			_ = i
-			itemFormatted, err := Format(item)
+			itemFormatted, err := Format(item.String())
 			if err != nil {
 				return nil, fmt.Errorf("error formatting json to yaml in a list: %v", err)
 			}
@@ -172,13 +165,21 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 // Format removes useless fields from kubernetes manifest
 func Format(in string) (out string, err error) {
 	out = in
-	// read filters from json array defaultPaths and delete fields according to them
-	filterCount, err := strconv.Atoi(gjson.Get(defaultPaths, "#").String())
-	if err == nil {
-		fmt.Printf("%d of type %T", filterCount, filterCount)
+	// read filters from json array defaultFilters and delete fields according to them
+	fCount := countFilters(defaultFilters)
+	for i := 0; i < fCount; i++ {
+		out, _ = sjson.Delete(out, gjson.Get(defaultFilters, fmt.Sprint(i)).String())
 	}
-	for i := 0; i < filterCount; i++ {
-		out, _ = sjson.Delete(out, gjson.Get(defaultPaths, strconv.Itoa(i)).String())
+	// gets container count and loops over each container with filters from containerFilters
+	cFCount := countFilters(containerFilters)
+	for i := 0; i <= countContainers(in); i++ {
+		containerNumber := fmt.Sprint(i)
+		for j := 0; j < cFCount; j++ {
+			filterNumber := fmt.Sprint(j)
+			filter := strings.Replace(gjson.Get(containerFilters, filterNumber).String(), "*", containerNumber, 1)
+			out, _ = sjson.Delete(out, filter)
+			// fmt.Println(filter)
+		}
 	}
 	return
 }
