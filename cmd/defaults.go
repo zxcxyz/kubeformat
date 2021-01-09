@@ -33,7 +33,7 @@ var defaultFilters = `[
     "spec.template.spec.dnsPolicy",
     "status",
     "spec.template.spec.terminationGracePeriodSeconds",
-    "spec.template.spec.schedulerName",
+    "spec.template.spec.schedulerName"
 ]`
 var containerFilters = `[
     "spec.template.spec.containers.*.livenessProbe.failureThreshold",
@@ -44,6 +44,10 @@ var containerFilters = `[
     "spec.template.spec.containers.*.imagePullPolicy",
     "spec.template.spec.containers.*.terminationMessagePath",
     "spec.template.spec.containers.*.terminationMessagePolicy"
+]`
+var emptyCheckFilters = `[
+    "metadata.annotations",
+    "spec.template.spec.securityContext"
 ]`
 
 // "metadata.annotations."kubernetes.io/service-account.name""

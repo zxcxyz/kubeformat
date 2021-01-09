@@ -185,5 +185,20 @@ func Format(in string) (out string, err error) {
 		}
 	default:
 	}
+	//get filters from emptyCheckFilters and iterate over json one more time to delete empty fields
+	filterCount = int(gjson.Get(emptyCheckFilters, "#").Int())
+	for i := 0; i < filterCount; i++ {
+		filter := gjson.Get(emptyCheckFilters, fmt.Sprint(i)).String()
+		if err != nil {
+			return "", fmt.Errorf("error getting values from emptyCheckFilters from json to yaml : %v", err)
+		}
+		result := gjson.Get(out, filter).String()
+		if result == "{}" {
+			out, _ = sjson.Delete(out, filter)
+		} else {
+		}
+		// out, _ = sjson.Delete(out, gjson.Get(emptyCheckFilters, fmt.Sprint(i)).String())
+	}
 	return
+
 }
