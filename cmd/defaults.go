@@ -15,7 +15,9 @@ limitations under the License.
 */
 package cmd
 
-var defaultFilters = `[
+var defaultFilters = `{
+    "filters": 
+    [
     "metadata.managedFields",
     "metadata.labels",
     "metadata.annotations.kubectl\\.kubernetes\\.io/last-applied-configuration",
@@ -33,9 +35,7 @@ var defaultFilters = `[
     "spec.template.spec.dnsPolicy",
     "status",
     "spec.template.spec.terminationGracePeriodSeconds",
-    "spec.template.spec.schedulerName"
-]`
-var containerFilters = `[
+    "spec.template.spec.schedulerName",
     "spec.template.spec.containers.*.livenessProbe.failureThreshold",
     "spec.template.spec.containers.*.livenessProbe.initialDelaySeconds",
     "spec.template.spec.containers.*.livenessProbe.periodSeconds",
@@ -44,11 +44,7 @@ var containerFilters = `[
     "spec.template.spec.containers.*.imagePullPolicy",
     "spec.template.spec.containers.*.terminationMessagePath",
     "spec.template.spec.containers.*.terminationMessagePolicy"
-]`
-var emptyCheckFilters = `[
-    "metadata.annotations",
-    "spec.template.spec.securityContext"
-]`
+]}`
 
 // "metadata.annotations."kubernetes.io/service-account.name""
 // "metadata.annotations."kubernetes.io/service-account.uid""

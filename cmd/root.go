@@ -156,49 +156,62 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 }
 
 // Format removes useless fields from kubernetes manifest
+// TODO refactor to make this func "pluggable"(pass filters earlier as a parameter)
+// todo implement optimized deleting of empty fields
 func Format(in string) (out string, err error) {
+	var containerCount int
 	out = in
-	// read filters from json array defaultFilters and delete fields according to them
-	filterCount := int(gjson.Get(defaultFilters, "#").Int())
-	for i := 0; i < filterCount; i++ {
-		out, _ = sjson.Delete(out, gjson.Get(defaultFilters, fmt.Sprint(i)).String())
-	}
+	// check if manifest has containers
 	kind := gjson.Get(in, "kind").String()
-	switch kind {
-	case
-		"Deployment",
-		"StatefulSet",
-		"DaemonSet",
-		"Pod":
-		// gets container count and loops over each container with filters from containerFilters
-		containerFilterCount := int(gjson.Get(containerFilters, "#").Int())
-		containerCount := int(gjson.Get(in, "spec.template.spec.containers.#").Int())
-
-		for i := 0; i <= containerCount; i++ {
-			containerNumber := fmt.Sprint(i)
-			for j := 0; j < containerFilterCount; j++ {
-				filterNumber := fmt.Sprint(j)
-				filter := strings.Replace(gjson.Get(containerFilters, filterNumber).String(), "*", containerNumber, 1)
-				out, _ = sjson.Delete(out, filter)
-				// fmt.Println(filter)
+	if kind == "Deployment" || kind == "StatefulSet" || kind == "DaemonSet" || kind == "Pod" {
+		containerCount = int(gjson.Get(in, "spec.template.spec.containers.#").Int())
+	}
+	// get filters and iterate over them
+	filters := gjson.Get(defaultFilters, "filters")
+	filters.ForEach(func(key, filter gjson.Result) bool {
+		if containerCount != 0 && strings.Contains(filter.String(), "*") {
+			for i := 0; i <= containerCount; i++ {
+				out, _ = sjson.Delete(out, strings.Replace(filter.String(), "*", fmt.Sprint(i), 1))
 			}
-		}
-	default:
-	}
-	//get filters from emptyCheckFilters and iterate over json one more time to delete empty fields
-	filterCount = int(gjson.Get(emptyCheckFilters, "#").Int())
-	for i := 0; i < filterCount; i++ {
-		filter := gjson.Get(emptyCheckFilters, fmt.Sprint(i)).String()
-		if err != nil {
-			return "", fmt.Errorf("error getting values from emptyCheckFilters from json to yaml : %v", err)
-		}
-		result := gjson.Get(out, filter).String()
-		if result == "{}" {
-			out, _ = sjson.Delete(out, filter)
 		} else {
+			out, _ = sjson.Delete(out, filter.String())
 		}
-		// out, _ = sjson.Delete(out, gjson.Get(emptyCheckFilters, fmt.Sprint(i)).String())
-	}
+		result := gjson.Get(out, "spec")
+		result.ForEach(func(key, value gjson.Result) bool {
+			return true // keep iterating
+		})
+		return true // keep iterating
+	})
+	// m, _ := gjson.Parse(out).Value().(map[string]interface{})
+	// _ = deepCleanJSON(m)
 	return
 
 }
+
+// func deepCleanJSON(m map[string]interface{}) (out string) {
+// 	foods := map[string]interface{}{
+// 		"bacon": "delicious",
+// 		"eggs": struct {
+// 			source string
+// 			price  float64
+// 		}{"chicken", 1.75},
+// 		"steak": true,
+// 	}
+// 	valueType := reflect.TypeOf(foods).Kind()
+
+// 	for k, v := range m {
+
+// 		if valueType == reflect.TypeOf(v).Kind() {
+// 			fmt.Println(v)
+// 			_ = k
+// 			// for a, b := range v {
+// 			// 	fmt.println(b)
+// 			// }
+// 			// deepCleanJSON(m[k])
+// 		}
+// 		// fmt.Printf("key[%s] value[%s]\n", k, v)
+// 	}
+// 	b, _ := json.Marshal(m)
+
+// 	return string(b)
+// }
