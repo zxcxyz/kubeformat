@@ -199,14 +199,17 @@ func Format(in string) (out string, err error) {
 }
 
 func deepCleanJSON(m map[string]interface{}) {
-	valueType := reflect.TypeOf(map[string]interface{}{}).Kind()
-	_ = valueType
+	// so we range over items
 	for k, v := range m {
-		if valueType == reflect.TypeOf(v).Kind() {
+		// if we find map[string]interface{} we check if it is empty.
+		// if it is we delete it and if its not we resursively call the same function
+		if reflect.TypeOf(map[string]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
 			if len(v.(map[string]interface{})) == 0 {
 				delete(m, k)
+			} else {
+				deepCleanJSON(v.(map[string]interface{}))
 			}
-			deepCleanJSON(v.(map[string]interface{}))
+			// if we find json array we call deepCleanJSONArray function
 		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
 			deepCleanJSONArray(v.([]interface{}))
 		}
@@ -215,10 +218,13 @@ func deepCleanJSON(m map[string]interface{}) {
 func deepCleanJSONArray(m []interface{}) {
 	valueType := reflect.TypeOf(map[string]interface{}{}).Kind()
 	_ = valueType
+	// so we iterate over json array items
 	for k, v := range m {
+		// if we find map[string]interface{} we call deepCleanJSON
 		if valueType == reflect.TypeOf(v).Kind() {
 			deepCleanJSON(v.(map[string]interface{}))
 			_ = k
+			// and if not we check if it is another array, if it is we call deepCleanJSONArray recursively
 		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
 			deepCleanJSONArray(v.([]interface{}))
 		}
