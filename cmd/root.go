@@ -171,9 +171,12 @@ func Format(in string) (out string, err error) {
 	// get filters and iterate over them
 	filters := gjson.Get(defaultFilters, "filters")
 	filters.ForEach(func(key, filter gjson.Result) bool {
-		if containerCount != 0 && strings.Contains(filter.String(), "*") {
-			for i := 0; i <= containerCount; i++ {
-				out, _ = sjson.Delete(out, strings.Replace(filter.String(), "*", fmt.Sprint(i), 1))
+		if strings.Contains(filter.String(), "*") {
+			if containerCount != 0 {
+				for i := 0; i <= containerCount; i++ {
+					out, _ = sjson.Delete(out, strings.Replace(filter.String(), "*", fmt.Sprint(i), 1))
+				}
+			} else {
 			}
 		} else {
 			out, _ = sjson.Delete(out, filter.String())
