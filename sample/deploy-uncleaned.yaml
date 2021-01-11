@@ -20,24 +20,19 @@ spec:
         command:
         - sleep
         image: python
-        imagePullPolicy: Always
         name: python
         ports:
         - containerPort: 80
           protocol: TCP
         resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
       - args:
         - "100000"
         command:
         - sleep
         image: python
-        imagePullPolicy: Always
         name: python1
         ports:
         - containerPort: 80
           protocol: TCP
         resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
+      securityContext: {}

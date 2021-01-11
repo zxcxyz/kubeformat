@@ -16,9 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -182,36 +184,43 @@ func Format(in string) (out string, err error) {
 		})
 		return true // keep iterating
 	})
-	// m, _ := gjson.Parse(out).Value().(map[string]interface{})
-	// _ = deepCleanJSON(m)
+	m, _ := gjson.Parse(out).Value().(map[string]interface{})
+	deepCleanJSON(m)
+	temp, err := json.Marshal(m)
+	if err != nil {
+		return "nil", fmt.Errorf("error marshalling json after deep cleaning : %v", err)
+	}
+	out = string(temp)
 	return
 
 }
 
-// func deepCleanJSON(m map[string]interface{}) (out string) {
-// 	foods := map[string]interface{}{
-// 		"bacon": "delicious",
-// 		"eggs": struct {
-// 			source string
-// 			price  float64
-// 		}{"chicken", 1.75},
-// 		"steak": true,
-// 	}
-// 	valueType := reflect.TypeOf(foods).Kind()
-
-// 	for k, v := range m {
-
-// 		if valueType == reflect.TypeOf(v).Kind() {
-// 			fmt.Println(v)
-// 			_ = k
-// 			// for a, b := range v {
-// 			// 	fmt.println(b)
-// 			// }
-// 			// deepCleanJSON(m[k])
-// 		}
-// 		// fmt.Printf("key[%s] value[%s]\n", k, v)
-// 	}
-// 	b, _ := json.Marshal(m)
-
-// 	return string(b)
-// }
+func deepCleanJSON(m map[string]interface{}) {
+	valueType := reflect.TypeOf(map[string]interface{}{}).Kind()
+	_ = valueType
+	for k, v := range m {
+		if valueType == reflect.TypeOf(v).Kind() {
+			if len(v.(map[string]interface{})) == 0 {
+				delete(m, k)
+			}
+			deepCleanJSON(v.(map[string]interface{}))
+		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
+			deepCleanJSONArray(v.([]interface{}))
+		}
+	}
+}
+func deepCleanJSONArray(m []interface{}) {
+	valueType := reflect.TypeOf(map[string]interface{}{}).Kind()
+	_ = valueType
+	for k, v := range m {
+		if valueType == reflect.TypeOf(v).Kind() {
+			deepCleanJSON(v.(map[string]interface{}))
+			_ = k
+		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
+			deepCleanJSONArray(v.([]interface{}))
+		}
+	}
+}
+func isEmpty(x interface{}) bool {
+	return x == reflect.Zero(reflect.TypeOf(x)).Interface()
+}
