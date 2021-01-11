@@ -1,7 +1,7 @@
 # kubeformat
 Tool to remove junk from kubectl manifests
 
-#Usage
+# Usage
 ```sh
 kubectl -n default get deployment | kubeformat
 ```
