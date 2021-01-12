@@ -1,5 +1,5 @@
 # kubeformat
-Tool to remove junk from kubectl manifests. For those who are also tired of kubectl flooding you with useless information. 
+Tool to remove junk from kubectl manifests. For those of you who are also tired of kubectl flooding you with useless information. 
 ### Features:
 * Cleans up fields using filters defined in cmd/defaults.go
 * Iterates over containers(container filters are defined with \*, "spec.template.spec.containers.\*.terminationMessagePath")
