@@ -37,13 +37,9 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kubeformat",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Tool designed to remove junk from kubectl manifests",
+	Long: `Usage:
+	kubectl get deployment -o yaml/json | kubeformat`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var in, out []byte
 		var err error

@@ -19,7 +19,6 @@ var defaultFilters = `{
     "filters": 
     [
     "metadata.managedFields",
-    "metadata.labels",
     "metadata.annotations.kubectl\\.kubernetes\\.io/last-applied-configuration",
     "metadata.annotations.deployment\\.kubernetes\\.io/revision",
     "metadata.creationTimestamp",
