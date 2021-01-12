@@ -4,6 +4,7 @@ Tool to remove junk from kubectl manifests. For those who are also tired of kube
 * Cleans up fields using filters defined in cmd/defaults.go
 * Iterates over containers(container filters are defined with \*, "spec.template.spec.containers.\*.terminationMessagePath")
 * Removes empty fields
+### Example
 ![example](./example.png)
 ### Upcoming features
 * Output in JSON
