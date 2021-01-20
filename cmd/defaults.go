@@ -26,24 +26,20 @@ var defaultFilters = `{
     "metadata.resourceVersion",
     "metadata.selfLink",
     "metadata.uid",
-    "spec.revisionHistoryLimit",
+    "metadata.ownerReferences",
+    "metadata.finalizers",
     "spec.template.metadata.creationTimestamp",
     "spec.progressDeadlineSeconds",
-    "spec.strategy",
-    "spec.template.spec.restartPolicy",
-    "spec.template.spec.dnsPolicy",
+    "spec.clusterIP",
     "status",
     "spec.template.spec.terminationGracePeriodSeconds",
-    "spec.template.spec.schedulerName",
-    "spec.template.spec.containers.*.livenessProbe.failureThreshold",
-    "spec.template.spec.containers.*.livenessProbe.initialDelaySeconds",
-    "spec.template.spec.containers.*.livenessProbe.periodSeconds",
-    "spec.template.spec.containers.*.livenessProbe.successThreshold" ,
-    "spec.template.spec.containers.*.livenessProbe.timeoutSeconds",
-    "spec.template.spec.containers.*.imagePullPolicy",
     "spec.template.spec.containers.*.terminationMessagePath",
     "spec.template.spec.containers.*.terminationMessagePolicy"
 ]}`
 
+// items[*].spec.volumeMode
+// items[*].spec.volumeName
+// items[*].spec.volumeClaimTemplates.metadata.creationTimestamp.
+// "metadata.namespace"
 // "metadata.annotations."kubernetes.io/service-account.name""
 // "metadata.annotations."kubernetes.io/service-account.uid""

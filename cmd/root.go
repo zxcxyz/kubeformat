@@ -205,24 +205,18 @@ func deepCleanJSON(m map[string]interface{}) {
 			} else {
 				deepCleanJSON(v.(map[string]interface{}))
 			}
-			// if we find json array we call deepCleanJSONArray function
+			// all code above isnt smart enough to traverse into arrays, here we fix that
 		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
-			deepCleanJSONArray(v.([]interface{}))
-		}
-	}
-}
-func deepCleanJSONArray(m []interface{}) {
-	valueType := reflect.TypeOf(map[string]interface{}{}).Kind()
-	_ = valueType
-	// so we iterate over json array items
-	for k, v := range m {
-		// if we find map[string]interface{} we call deepCleanJSON
-		if valueType == reflect.TypeOf(v).Kind() {
-			deepCleanJSON(v.(map[string]interface{}))
-			_ = k
-			// and if not we check if it is another array, if it is we call deepCleanJSONArray recursively
-		} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
-			deepCleanJSONArray(v.([]interface{}))
+			for _, j := range v.([]interface{}) {
+				// if we find map[string]interface{} we go deeper, if not its fine
+				if reflect.TypeOf(map[string]interface{}{}).Kind() == reflect.TypeOf(j).Kind() {
+					deepCleanJSON(j.(map[string]interface{}))
+				} else if reflect.TypeOf([]interface{}{}).Kind() == reflect.TypeOf(j).Kind() {
+					// dunno if this is needed tbh, this is for recursively traversing in arrays
+					deepCleanJSON(j.(map[string]interface{}))
+				}
+
+			}
 		}
 	}
 }

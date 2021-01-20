@@ -5,9 +5,15 @@ metadata:
   namespace: dev
 spec:
   replicas: 2
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: python
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -19,6 +25,7 @@ spec:
         command:
         - sleep
         image: python
+        imagePullPolicy: Always
         name: python
         ports:
         - containerPort: 80
@@ -28,7 +35,11 @@ spec:
         command:
         - sleep
         image: python
+        imagePullPolicy: Always
         name: python1
         ports:
         - containerPort: 80
           protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
