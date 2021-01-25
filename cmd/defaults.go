@@ -28,6 +28,7 @@ var defaultFilters = `{
     "metadata.uid",
     "metadata.ownerReferences",
     "metadata.finalizers",
+    "metadata.namespace",
     "spec.template.metadata.creationTimestamp",
     "spec.progressDeadlineSeconds",
     "spec.clusterIP",
