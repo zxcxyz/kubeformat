@@ -10,7 +10,7 @@ Tool to remove junk from kubectl manifests. For those of you who are also tired 
 ### Upcoming features
 * Output in JSON
 * Read input from files
-* ~~ Importing custom filters ~~
+* ~~Importing custom filters~~
 * Maybe add statefulness (path to filters)
 # Usage
 ```sh
