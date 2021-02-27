@@ -1,4 +1,6 @@
 /*
+Package cmd blah
+
 Copyright © 2021 zxcxyz <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +35,7 @@ import (
 )
 
 var cfgFile string
+var filtersPath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -75,7 +78,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubeformat.yaml)")
-
+	rootCmd.PersistentFlags().StringVarP(&filtersPath, "filtersPath", "p", "", "Path to your filters json. For right json template please refer to https://github.com/zxcxyz/kubeformat/blob/master/cmd/defaults.go")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -158,29 +161,36 @@ func ToFormattedYaml(in []byte) (out []byte, err error) {
 // todo implement optimized deleting of empty fields
 func Format(in string) (out string, err error) {
 	var containerCount int
+	var filters gjson.Result
 	out = in
 	// check if manifest has containers
 	kind := gjson.Get(in, "kind").String()
 	if kind == "Deployment" || kind == "StatefulSet" || kind == "DaemonSet" || kind == "Pod" {
 		containerCount = int(gjson.Get(in, "spec.template.spec.containers.#").Int())
 	}
+
 	// get filters and iterate over them
-	filters := gjson.Get(defaultFilters, "filters")
+	if filtersPath != "" {
+		d, err := ioutil.ReadFile(filtersPath)
+		if err != nil {
+			// why we return "nil" here instead of nil???????
+			return "nil", fmt.Errorf("error reading filters from file : %v", err)
+		}
+		filters = gjson.Get(string(d), "filters")
+	} else {
+		filters = gjson.Get(defaultFilters, "filters")
+	}
+	// anonymous function. why it is here? nobody knows
 	filters.ForEach(func(key, filter gjson.Result) bool {
 		if strings.Contains(filter.String(), "*") {
 			if containerCount != 0 {
 				for i := 0; i <= containerCount; i++ {
 					out, _ = sjson.Delete(out, strings.Replace(filter.String(), "*", fmt.Sprint(i), 1))
 				}
-			} else {
 			}
 		} else {
 			out, _ = sjson.Delete(out, filter.String())
 		}
-		result := gjson.Get(out, "spec")
-		result.ForEach(func(key, value gjson.Result) bool {
-			return true // keep iterating
-		})
 		return true // keep iterating
 	})
 	m, _ := gjson.Parse(out).Value().(map[string]interface{})
@@ -215,7 +225,6 @@ func deepCleanJSON(m map[string]interface{}) {
 					// dunno if this is needed tbh, this is for recursively traversing in arrays
 					deepCleanJSON(j.(map[string]interface{}))
 				}
-
 			}
 		}
 	}

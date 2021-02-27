@@ -1,4 +1,6 @@
 /*
+Package cmd blah
+
 Copyright © 2021 zxcxyz <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");

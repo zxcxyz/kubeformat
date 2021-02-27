@@ -1,0 +1,23 @@
+{
+    "filters": 
+    [
+    "metadata.managedFields",
+    "metadata.annotations.kubectl\\.kubernetes\\.io/last-applied-configuration",
+    "metadata.annotations.deployment\\.kubernetes\\.io/revision",
+    "metadata.creationTimestamp",
+    "metadata.generation",
+    "metadata.resourceVersion",
+    "metadata.selfLink",
+    "metadata.uid",
+    "spec",
+    "metadata.ownerReferences",
+    "metadata.finalizers",
+    "metadata.namespace",
+    "spec.template.metadata.creationTimestamp",
+    "spec.progressDeadlineSeconds",
+    "spec.clusterIP",
+    "status",
+    "spec.template.spec.terminationGracePeriodSeconds",
+    "spec.template.spec.containers.*.terminationMessagePath",
+    "spec.template.spec.containers.*.terminationMessagePolicy"
+]}
