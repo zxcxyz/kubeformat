@@ -10,8 +10,8 @@ Tool to remove junk from kubectl manifests. For those of you who are also tired 
 ### Upcoming features
 * Output in JSON
 * Read input from files
-* ~~Importing custom filters~~
 * Maybe add statefulness (path to filters)
+* ~~Importing custom filters~~
 # Usage
 ```sh
 kubectl -n default get deployment | kubeformat
