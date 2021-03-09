@@ -14,11 +14,11 @@ mv kubeformat ~/usr/local/bin/kubeformat
 # Example
 ![example](./example.png)
 ### TODO
-* Cleanup out-of-the-box CLI flags
 * Output in JSON
 * Maybe add statefulness (path to filters)
 * Maybe add optional secret decoding from b64
 * Add parsing of multiple manifests (--- case)
+* ~~Cleanup out-of-the-box CLI flags~~
 * ~~Read input from files~~ cat file | kubeformat accomplishes the same
 * ~~Add installation guide~~
 * ~~Importing custom filters~~
