@@ -52,6 +52,14 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if strings.ToLower(output) == "json" {
+			out, _ = yaml.YAMLToJSON(out)
+
+			if err != nil {
+				cmd.Print(fmt.Errorf("error converting from yaml to json : %v", err))
+			}
+
+		}
 		cmd.Print(string(out))
 		// if output == "yaml" {
 		// 	cmd.Print(string(out))
@@ -180,10 +188,11 @@ func Format(in string) (out string, err error) {
 
 }
 
+// this function is used to strip json of fields without a value
 func deepCleanJSON(m map[string]interface{}) {
-	// so we range over items
+	// so we range over json fields
 	for k, v := range m {
-		// if we find map[string]interface{} we check if it is empty.
+		// if we find map[string]interface{} which is just a container with unknown stuff we check if it is empty.
 		// if it is we delete it and if its not we resursively call the same function
 		if reflect.TypeOf(map[string]interface{}{}).Kind() == reflect.TypeOf(v).Kind() {
 			if len(v.(map[string]interface{})) == 0 {
