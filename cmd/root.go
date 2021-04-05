@@ -18,11 +18,13 @@ limitations under the License.
 package cmd
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -31,8 +33,8 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-var filtersPath string
-var output string
+var filtersPath, output string
+var decodeSwitch bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -92,6 +94,7 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVarP(&filtersPath, "filtersPath", "p", "", "Path to your filters json. For right json template please refer to https://github.com/zxcxyz/kubeformat/blob/master/cmd/defaults.go")
 	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "yaml", "Output format. json/yaml. Default yaml.")
+	rootCmd.PersistentFlags().BoolVarP(&decodeSwitch, "decode", "d", false, "Decode secrets. Default false.")
 }
 
 // ToFormattedYaml used to format input json or yaml to clean yaml
@@ -179,13 +182,21 @@ func Format(in string) (out string, err error) {
 	})
 	m, _ := gjson.Parse(out).Value().(map[string]interface{})
 	deepCleanJSON(m)
+
+	if decodeSwitch && kind == "Secret" {
+		m, err = decode(m)
+		if err != nil {
+			return "nil", err
+		}
+	}
+
 	temp, err := json.Marshal(m)
 	if err != nil {
 		return "nil", fmt.Errorf("error marshalling json after deep cleaning : %v", err)
 	}
+
 	out = string(temp)
 	return
-
 }
 
 // this function is used to strip json of fields without a value
@@ -214,6 +225,30 @@ func deepCleanJSON(m map[string]interface{}) {
 		}
 	}
 }
+
+// we receive json []byte parse it to map[string]interface{} then decode b64 values and marshal map[string]interface{} back to []byte
+func decode(in map[string]interface{}) (out map[string]interface{}, err error) {
+	data, _ := in["data"].(map[string]interface{})
+	for k, v := range data {
+		// you cant explicitly convert interface to string thats why we use fmt.Sprintf()
+		sDec, e := b64.StdEncoding.DecodeString(fmt.Sprintf("%v", v))
+		err = check(e)
+		// if you write data[k] = sDec values will be encoded
+		// why????????????? maybe go refuses to overwrite data[k] with byte[]?? why doesnt it throw errors then???
+		data[k] = string(sDec)
+	}
+	in["data"] = data
+	return in, err
+}
+
 func isEmpty(x interface{}) bool {
 	return x == reflect.Zero(reflect.TypeOf(x)).Interface()
+}
+
+func check(err error) (out error) {
+	_, _, no, _ := runtime.Caller(1)
+	if err != nil {
+		return fmt.Errorf("error encountered, caller function line: %v \n Error: %v", no, err)
+	}
+	return nil
 }
